@@ -6,8 +6,8 @@
 #
 # Configuration variables
 BASEDIR=`pwd`/dbgen
-TPCHTMP=/dev/shm/$USER/tpch_tmp
-PGDATADIR=/dev/shm/$USER/pgdata
+TPCHTMP=$HOME/pg92/tmp
+PGDATADIR=$HOME/pg92/pgdata
 PGPORT=5442
 REMAKE_DATA=true
 DB_NAME="tpch"
