@@ -3,7 +3,9 @@
 # Linux system (certainly, Kernel 2.6+).
 # Assume that we're generally interested in re-initializing data;
 # it may be useful to turn off REMAKE_DATA for repeated runs.
-#
+
+# stop on first error
+set -e
 # Configuration variables
 BASEDIR=`pwd`/dbgen
 TPCHTMP=$HOME/pg92/tmp
@@ -14,10 +16,17 @@ DB_NAME="tpch"
 POPULATE_DB=true
 CREATE_MIN_INDEXES=false
 CREATE_ALL_INDEXES=true
-# Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
-# are considered valid for comparative purposes.
-SCALE=1
 
+# Install teardown() function to kill any lingering jobs
+teardown() {
+  echo "Executing teardown()"
+  pg_ctl stop -D "$PGDATADIR"
+  sleep 1
+  jobs -p
+  jobs
+  test -z "`jobs -p`" || kill `jobs -p`
+}
+test -z "${DEBUG-}" && trap "teardown" EXIT
 
 #
 # The actual code; you shouldn't have to modify anything from this point on
@@ -63,13 +72,14 @@ fi
 #
 # Start a new instance of Postgres
 #
-pgtune -T DW -i $PGDATADIR/postgresql.conf -o $PGDATADIR/postgresql.conf
 postgres -D "$PGDATADIR" -p $PGPORT &
 PGPID=$!
 while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
   echo "Waiting for the Postgres server to start"
   sleep 1
 done
+# wait for it to finish starting
+sleep 2
 
 if $CREATE_NEW_DB; then
   createdb -p $PGPORT $USER --encoding=UTF-8 --lc-ctype=en_US.UTF-8 --lc-collate=en_US.UTF-8
@@ -227,5 +237,4 @@ done
 
 printf 'Elapsed time: %s\n' $(timer $t)
 
-pg_ctl stop -D "$PGDATADIR"
 
