@@ -5,8 +5,11 @@ if [ $# -ne 1 ]; then
   echo "$0 6"
   exit 1
 fi
+# Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
+# are considered valid for comparative purposes.
+SCALE=1
+PGDATADIR=$HOME/pg92/pgdata${SCALE}GB
 PERFDATADIR=perfdata-singlerun
-PGDATADIR=$HOME/pg92/pgdata
 PGPORT=5442
 DRIO_NVRAMSIM=$HOME/projects/DynamoRIO-Linux-4.0.0-7/nvramsim/build/libmemtrace.so
 PIN_HOME=$HOME/projects/pin-2.12-55942-gcc.4.4.7-linux
@@ -43,13 +46,13 @@ dir="$PERFDATADIR/q${ii}"
 mkdir -p $dir
 cd $dir
 ### get statistics e.g. IPC, cache hits/misses
-perf stat -B --log-fd 2 -- postgres -D $PGDATADIR -p $PGPORT &
+# perf stat -B --log-fd 2 -- postgres -D $PGDATADIR -p $PGPORT &
 ### for callgraph
-# perf record -g postgres -D $PGDATADIR -p $PGPORT &
+perf record -g postgres -D $PGDATADIR -p $PGPORT &
 ### run under dynamorio
 # drrun -c "$DRIO_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
 ### run under pin
-# $PIN_EXE -appdebug -t "$PIN_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
+#$PIN_EXE -follow_execv -mt -t "$PIN_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
 pg_ctl -D $PGDATADIR status
 while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
   echo "Waiting for the Postgres server to start"
@@ -66,9 +69,9 @@ echo "Running query: $i"
 echo "Asking Pg server to stop"
 pg_ctl stop -D $PGDATADIR
 echo "Pg server stopped"
-#cgf="../q${ii}-callgraph.pdf"
-#echo "Creating the call graph: $cgf"
-#perf script | python $BASEDIR/gprof2dot.py -f perf | dot -Tpdf -o $cgf &
+cgf="../q${ii}-callgraph.pdf"
+echo "Creating the call graph: $cgf"
+perf script | python $BASEDIR/gprof2dot.py -f perf | dot -Tpdf -o $cgf &
 cd - >/dev/null
 
 for p in $(jobs -p);
