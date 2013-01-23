@@ -4,63 +4,9 @@
 # Assume that we're generally interested in re-initializing data;
 # it may be useful to turn off REMAKE_DATA for repeated runs.
 
-# stop on first error
-set -e
-# Configuration variables
-# Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
-# are considered valid for comparative purposes.
-SCALE=1
-# other config
-BASEDIR=`pwd`/dbgen
-TPCHTMP=$HOME/pg92/tmp
-PGDATADIR=$HOME/pg92/pgdata${SCALE}GB
-PGPORT=5442
-REMAKE_DATA=true
-DB_NAME="tpch"
-POPULATE_DB=true
-CREATE_MIN_INDEXES=false
-CREATE_ALL_INDEXES=true
-
-# Install teardown() function to kill any lingering jobs
-teardown() {
-  echo "Executing teardown()"
-  pg_ctl stop -D "$PGDATADIR"
-  sleep 1
-  jobs -p
-  jobs
-  test -z "`jobs -p`" || kill `jobs -p`
-}
-test -z "${DEBUG-}" && trap "teardown" EXIT
-
-#
-# The actual code; you shouldn't have to modify anything from this point on
-#
-CORES=`grep -c ^processor /proc/cpuinfo`
-
-#
-# Check for the running Postgres; exit if there is any on the given port
-#
-PGPORT_PROCLIST="$(lsof -i tcp:$PGPORT | tail -n +2 | awk '{print $2}')"
-if [[ $(echo "$PGPORT_PROCLIST" | wc -w) -gt 0 ]];
-then
-  echo "The following processes have taken port $PGPORT"
-  echo "Please terminate them before running this script"
-  echo
-  for p in $PGPORT_PROCLIST;
-  do
-    ps -o pid,cmd $p
-  done
-  exit -1
-fi
-
-#
-# Check if a Postgres server is running in the same directory
-#
-if pg_ctl status -D $PGDATADIR | grep "server is running" -q; then
-  echo "A Postgres server is already running in the selected directory. Exiting."
-  pg_ctl status -D $PGDATADIR
-  exit -2
-fi
+BASEDIR=$(dirname "$0")
+BASEDIR=$(cd "$BASEDIR"; pwd)
+. "$BASEDIR/pgtpch_defaults"
 
 #
 # Initialize DB if $PGDATADIR does not exist
@@ -139,20 +85,20 @@ then
 	exit -1
 fi
 
-cd $BASEDIR
+cd "$BASEDIR"
 if ! [ -x dbgen ] || ! [ -x qgen ];
 then
   make -j $CORES
 fi
 
-mkdir -p $TPCHTMP || die "Failed to create temporary directory: $TPCHTMP"
+mkdir -p "$TPCHTMP" || die "Failed to create temporary directory: '$TPCHTMP'"
 
 if $REMAKE_DATA
 then
-  cd $TPCHTMP
-  cp $BASEDIR/dists.dss .
+  cd "$TPCHTMP"
+  cp "$BASEDIR/dists.dss" .
   # Run dbgen with "force", to overwrite existing files
-  $BASEDIR/dbgen -s $SCALE -f -v
+  "$BASEDIR/dbgen" -s $SCALE -f -v
 fi
 
 if $POPULATE_DB
@@ -167,8 +113,8 @@ then
   fi
   TIME=`date`
   psql -p $PGPORT -d $DB_NAME -c "comment on database $DB_NAME is 'TPC-H data, created at $TIME'"
-  psql -p $PGPORT -d $DB_NAME < $BASEDIR/dss.ddl
-  cd $TPCHTMP
+  psql -p $PGPORT -d $DB_NAME < "$BASEDIR/dss.ddl"
+  cd "$TPCHTMP"
   for f in *.tbl; do
 	bf="$(basename $f .tbl)"
 	# We truncate the empty table in the sames transaction to enable Postgres to
@@ -185,8 +131,8 @@ then
   done
 fi
 
-cd $BASEDIR
-rm -rf $TPCHTMP
+cd "$BASEDIR"
+rm -rf "$TPCHTMP"
 
 # Since wal_level is hopefully set to 'minimal', it ought to be possible to skip
 # WAL logging these create index operations, too.
@@ -232,7 +178,7 @@ echo "Checkpointing..."
 psql -p $PGPORT -d $DB_NAME -c "checkpoint"
 
 
-cd $BASEDIR
+cd "$BASEDIR"
 for i in $(seq 1 22);
 do
   ii=$(printf "%02d" $i)

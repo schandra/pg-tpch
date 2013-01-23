@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# stop on first error
+#set -e
+# Configuration variables
+# Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
+# are considered valid for comparative purposes.
+SCALE=1
+# other configs
+BASEDIR=$(dirname "$0")
+BASEDIR=$(cd "$BASEDIR"; pwd)
+TPCHTMP=$HOME/pg92/tmp
+PGDATADIR=$HOME/pg92/pgdata${SCALE}GB
+PGPORT=5442
+REMAKE_DATA=true
+DB_NAME="tpch"
+POPULATE_DB=true
+CREATE_MIN_INDEXES=false
+CREATE_ALL_INDEXES=true
+PGDATADIR=$HOME/pg92/pgdata${SCALE}GB
+PERFDATADIR=perfdata
+PGPORT=5442
+DRIO_NVRAMSIM=$HOME/projects/DynamoRIO-Linux-4.0.0-7/nvramsim/build/libmemtrace.so
+PIN_HOME=$HOME/projects/pin-2.12-55942-gcc.4.4.7-linux
+PIN_EXE=$PIN_HOME/pin
+PIN_NVRAMSIM=$PIN_HOME/source/tools/nvramsim/obj-intel64/nvramsim.so
+CORES=`grep -c ^processor /proc/cpuinfo`
+
+# Install teardown() function to kill any lingering jobs
+teardown() {
+  echo "Executing teardown()"
+  pg_ctl stop -m fast -D "$PGDATADIR" 2>/dev/null && sleep 1
+  JOBS=$(jobs -p)
+  test -z "$JOBS" || { kill $JOBS && sleep 2; }
+  JOBS=$(jobs -p)
+  test -z "$JOBS" || kill -9 $JOBS
+}
+test -z "${DEBUG-}" && trap "teardown" EXIT
+
+#
+# Check for the running Postgres; exit if there is any on the given port
+#
+PGPORT_PROCLIST="$(lsof -i tcp:$PGPORT | tail -n +2 | awk '{print $2}')"
+if [[ $(echo "$PGPORT_PROCLIST" | wc -w) -gt 0 ]];
+then
+  echo "The following processes have taken port $PGPORT"
+  echo "Please terminate them before running this script"
+  echo
+  for p in $PGPORT_PROCLIST;
+  do
+    ps -o pid,cmd $p
+  done
+  exit -1
+fi
+
+#
+# Check if a Postgres server is running in the same directory
+#
+if pg_ctl status -D $PGDATADIR | grep "server is running" -q; then
+  echo "A Postgres server is already running in the selected directory. Exiting."
+  pg_ctl status -D $PGDATADIR
+  exit -2
+fi
+
+cd "$BASEDIR"
+

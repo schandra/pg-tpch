@@ -1,35 +1,16 @@
 #!/bin/bash
 
-PERFDATADIR=perfdata
+BASEDIR=$(dirname "$0")
+BASEDIR=$(cd "$BASEDIR"; pwd)
+. "$BASEDIR/pgtpch_defaults"
+
 if [ $# -gt 0 ]; then
   PERFDATADIR="$PERFDATADIR-$1"
 fi
-PGDATADIR=/dev/shm/$USER/pgdata
-PGPORT=5442
 
-BASEDIR=$(cd "$(dirname $0)"; pwd)
-cd $BASEDIR
-
-PGPORT_PROCLIST="$(lsof -i tcp:$PGPORT | tail -n +2 | awk '{print $2}')"
-if [[ $(echo "$PGPORT_PROCLIST" | wc -w) -gt 0 ]];
-then
-  echo "The following processes have taken port $PGPORT"
-  echo "Please terminate them before running this script"
-  echo
-  for p in $PGPORT_PROCLIST;
-  do
-    ps -o pid,cmd $p
-  done
-  exit -1
-fi
-
-#
-# Check if a Postgres server is running in the same directory
-#
-if pg_ctl status -D $PGDATADIR | grep "server is running" -q; then
-  echo "A Postgres server is already running in the selected directory. Exiting."
-  pg_ctl status -D $PGDATADIR
-  exit -2
+if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
+  echo "Perf requires reading kernel symbols. Please enter your sudo password to allow this:"
+  echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
 fi
 
 for i in $(seq 1 22);
@@ -37,7 +18,7 @@ do
   ii=$(printf "%02d" $i)
   dir="$PERFDATADIR/q${ii}"
   mkdir -p $dir
-  cd $dir
+  cd "$dir"
   perf record -g postgres -D $PGDATADIR -p $PGPORT &
   PGPID=$!
   while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
@@ -48,11 +29,11 @@ do
   echo "Running query: $i"
   /usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
     -o query_exec_seconds.txt \
-    psql -p $PGPORT tpch <$BASEDIR/$f
+    psql -p $PGPORT tpch <"$BASEDIR/$f"
   pg_ctl stop -D $PGDATADIR
   cgf="../q${ii}-callgraph.pdf"
   echo "Creating the call graph: $cgf"
-  perf script | python $BASEDIR/gprof2dot.py -f perf | dot -Tpdf -o $cgf &
+  perf script | python "$BASEDIR/gprof2dot.py" -f perf | dot -Tpdf -o $cgf &
   cd - >/dev/null
 done
 
