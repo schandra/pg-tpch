@@ -41,6 +41,11 @@ if pg_ctl status -D $PGDATADIR | grep "server is running" -q; then
   exit -2
 fi
 
+if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
+  echo "Perf requires reading kernel symbols. Please enter your sudo password to allow this:"
+  echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
+fi
+
 ii=$(printf "%02d" $1)
 dir="$PERFDATADIR/q${ii}"
 mkdir -p $dir
