@@ -8,10 +8,7 @@ if [ $# -gt 0 ]; then
   PERFDATADIR="$PERFDATADIR-$1"
 fi
 
-if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
-  echo "Perf requires reading kernel symbols. Please enter your sudo password to allow this:"
-  echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
-fi
+perf_set_kernel_params
 
 for i in $(seq 1 22);
 do

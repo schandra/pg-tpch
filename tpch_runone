@@ -10,10 +10,7 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
-if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
-  echo "Perf requires reading kernel symbols. Please enter your sudo password to allow this:"
-  echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
-fi
+perf_set_kernel_params
 
 ii=$(printf "%02d" $1)
 dir="$PERFDATADIR/q${ii}"
@@ -27,6 +24,8 @@ perf record -g postgres -D $PGDATADIR -p $PGPORT &
 # drrun -c "$DRIO_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
 ### run under pin
 #$PIN_EXE -follow_execv -mt -t "$PIN_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
+### Google Performance Tools
+# CPUPROFILE=/tmp/profile postgres -D $PGDATADIR -p $PGPORT &
 pg_ctl -D $PGDATADIR status
 while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
   echo "Waiting for the Postgres server to start"

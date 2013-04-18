@@ -28,7 +28,7 @@ CORES=`grep -c ^processor /proc/cpuinfo`
 
 # Install teardown() function to kill any lingering jobs
 teardown() {
-  echo "Executing teardown()"
+  echo "Cleaning up before exiting"
   pg_ctl stop -m fast -D "$PGDATADIR" 2>/dev/null && sleep 1
   JOBS=$(jobs -p)
   test -z "$JOBS" || { kill $JOBS && sleep 2; }
@@ -36,6 +36,21 @@ teardown() {
   test -z "$JOBS" || kill -9 $JOBS
 }
 test -z "${DEBUG-}" && trap "teardown" EXIT
+
+perf_set_kernel_params() {
+  if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
+    echo "Perf requires reading kernel symbols."
+    echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
+  fi
+  if [ -r /proc/sys/kernel/perf_event_paranoid ] && [ $(cat /proc/sys/kernel/perf_event_paranoid) -ne -1 ]; then
+    echo "Need to enable the reading of performance events."
+    echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid
+  fi
+  if [ -r /proc/sys/kernel/perf_event_mlock_kb ] && [ $(cat /proc/sys/kernel/perf_event_mlock_kb) -lt 1024 ]; then
+    echo "Need to give more memory to perf."
+    echo 1024 | sudo tee /proc/sys/kernel/perf_event_mlock_kb
+  fi
+}
 
 #
 # Check for the running Postgres; exit if there is any on the given port
