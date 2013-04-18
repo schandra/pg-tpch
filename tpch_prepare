@@ -14,7 +14,7 @@ BASEDIR=$(cd "$BASEDIR"; pwd)
 if ! [ -d "$PGDATADIR" ]; then
   mkdir -p "$PGDATADIR"
   initdb -D "$PGDATADIR" --encoding=UTF-8 --lc-ctype=en_US.UTF-8 --lc-collate=en_US.UTF-8
-  pgtune -T DW -i $PGDATADIR/postgresql.conf -o $PGDATADIR/postgresql.conf
+  # pgtune -T DW -i $PGDATADIR/postgresql.conf -o $PGDATADIR/postgresql.conf
   CREATE_NEW_DB=true
 else
   CREATE_NEW_DB=false
@@ -85,7 +85,7 @@ then
 	exit -1
 fi
 
-cd "$BASEDIR"
+cd "$BASEDIR/dbgen"
 if ! [ -x dbgen ] || ! [ -x qgen ];
 then
   make -j $CORES
@@ -96,9 +96,9 @@ mkdir -p "$TPCHTMP" || die "Failed to create temporary directory: '$TPCHTMP'"
 if $REMAKE_DATA
 then
   cd "$TPCHTMP"
-  cp "$BASEDIR/dists.dss" .
+  cp "$BASEDIR/dbgen/dists.dss" .
   # Run dbgen with "force", to overwrite existing files
-  "$BASEDIR/dbgen" -s $SCALE -f -v
+  "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v
 fi
 
 if $POPULATE_DB
@@ -113,7 +113,7 @@ then
   fi
   TIME=`date`
   psql -p $PGPORT -d $DB_NAME -c "comment on database $DB_NAME is 'TPC-H data, created at $TIME'"
-  psql -p $PGPORT -d $DB_NAME < "$BASEDIR/dss.ddl"
+  psql -p $PGPORT -d $DB_NAME < "$BASEDIR/dbgen/dss.ddl"
   cd "$TPCHTMP"
   for f in *.tbl; do
 	bf="$(basename $f .tbl)"
@@ -178,7 +178,7 @@ echo "Checkpointing..."
 psql -p $PGPORT -d $DB_NAME -c "checkpoint"
 
 
-cd "$BASEDIR"
+cd "$BASEDIR/dbgen"
 for i in $(seq 1 22);
 do
   ii=$(printf "%02d" $i)
