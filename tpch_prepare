@@ -29,6 +29,7 @@ while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
   echo "Waiting for the Postgres server to start"
   sleep 1
 done
+
 # wait for it to finish starting
 sleep 2
 
@@ -187,5 +188,3 @@ do
 done
 
 printf 'Elapsed time: %s\n' $(timer $t)
-
-

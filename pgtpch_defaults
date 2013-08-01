@@ -2,11 +2,13 @@
 
 # stop on first error
 #set -e
+
 # Configuration variables
 # Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
 # are considered valid for comparative purposes.
-SCALE=1
-# other configs
+SCALE=1 #1GB
+
+# Other configuration variables
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
 TPCHTMP=$HOME/pg92/tmp
@@ -17,16 +19,16 @@ DB_NAME="tpch"
 POPULATE_DB=true
 CREATE_MIN_INDEXES=false
 CREATE_ALL_INDEXES=true
-PGDATADIR=$HOME/pg92/pgdata${SCALE}GB
 PERFDATADIR=perfdata
-PGPORT=5442
-DRIO_NVRAMSIM=$HOME/projects/DynamoRIO-Linux-4.0.0-7/nvramsim/build/libmemtrace.so
-PIN_HOME=$HOME/projects/pin-2.12-55942-gcc.4.4.7-linux
-PIN_EXE=$PIN_HOME/pin
-PIN_NVRAMSIM=$PIN_HOME/source/tools/nvramsim/obj-intel64/nvramsim.so
+#DRIO_NVRAMSIM=$HOME/projects/DynamoRIO-Linux-4.0.0-7/nvramsim/build/libmemtrace.so
+#PIN_HOME=$HOME/projects/pin-2.12-55942-gcc.4.4.7-linux
+#PIN_EXE=$PIN_HOME/pin
+#PIN_NVRAMSIM=$PIN_HOME/source/tools/nvramsim/obj-intel64/nvramsim.so
 CORES=`grep -c ^processor /proc/cpuinfo`
 
+#
 # Install teardown() function to kill any lingering jobs
+#
 teardown() {
   echo "Cleaning up before exiting"
   pg_ctl stop -m fast -D "$PGDATADIR" 2>/dev/null && sleep 1
@@ -37,6 +39,9 @@ teardown() {
 }
 test -z "${DEBUG-}" && trap "teardown" EXIT
 
+#
+# Set up perf
+#
 perf_set_kernel_params() {
   if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
     echo "Perf requires reading kernel symbols."

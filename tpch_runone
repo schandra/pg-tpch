@@ -16,32 +16,49 @@ ii=$(printf "%02d" $1)
 dir="$PERFDATADIR/q${ii}"
 mkdir -p $dir
 cd "$dir"
-### get statistics e.g. IPC, cache hits/misses
-# perf stat -B --log-fd 2 -- postgres -D $PGDATADIR -p $PGPORT &
-### for callgraph
-perf record -g postgres -D $PGDATADIR -p $PGPORT &
+
+### Query to be executed
+f="queries/q$ii.sql"
+
 ### run under dynamorio
 # drrun -c "$DRIO_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
+
 ### run under pin
 #$PIN_EXE -follow_execv -mt -t "$PIN_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
+
 ### Google Performance Tools
 # CPUPROFILE=/tmp/profile postgres -D $PGDATADIR -p $PGPORT &
-pg_ctl -D $PGDATADIR status
-while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
-  echo "Waiting for the Postgres server to start"
-  pg_ctl -D $PGDATADIR status
-  sleep 1
-done
-pg_ctl -D $PGDATADIR status
-sleep 2
-f="queries/q$ii.sql"
-echo "Running query: $i"
+
+### Get execution time without perf
 /usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
-  -o query_exec_seconds.txt \
-  psql -p $PGPORT tpch <"$BASEDIR/$f"
-echo "Asking Pg server to stop"
-pg_ctl stop -D $PGDATADIR
-echo "Pg server stopped"
+    -o exectime.txt \
+    postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+
+### Collect data with perf to generate callgraph
+perf record -g postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+
+### Collect basic stats with perf
+perf stat -B --log-fd 2 --\
+    postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f" 2> stats.txt
+
+
+### The following is not necessary when running postgres with '--single'
+#pg_ctl -D $PGDATADIR status
+#while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
+  #echo "Waiting for the Postgres server to start"
+  #pg_ctl -D $PGDATADIR status
+  #sleep 1
+#done
+#pg_ctl -D $PGDATADIR status
+#sleep 2
+#echo "Running query: $i"
+#/usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
+  #-o query_exec_seconds.txt \
+  #psql -p $PGPORT tpch <"$BASEDIR/$f"
+#echo "Asking Pg server to stop"
+#pg_ctl stop -D $PGDATADIR
+#echo "Pg server stopped"
+
 cgf="../q${ii}-callgraph.pdf"
 echo "Creating the call graph: $cgf"
 perf script | python "$BASEDIR/gprof2dot.py" -f perf | dot -Tpdf -o $cgf &
