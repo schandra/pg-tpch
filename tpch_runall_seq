@@ -1,5 +1,17 @@
 #!/bin/bash
 
+###
+# This script runs all the queries individually 3 times
+#   * 1) Gather execution time using '/usr/bin/time'
+#   * 2) Collect data with perf to generate callgraph
+#   * 3) Collect a set of basic statistics, again using perf. For now we obtain
+#     the default given by perf, but this can be modified later to extract
+#     statistics of interest to us.
+#
+# The script later executes all the queries in sequence using the same
+# methodology followed for each individual query.
+###
+
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
 . "$BASEDIR/pgtpch_defaults"
@@ -24,7 +36,7 @@ do
   /usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
     -o exectime.txt \
     postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
-    
+
   ### Collect data with perf to generate callgraph
   perf record -g postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
 
@@ -32,26 +44,35 @@ do
   perf stat -B --log-fd 2 --\
     postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f" 2> stats.txt
 
-  ### The following is not necessary when running postgres with '--single'
-  #PGPID=$!
-  #while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
-    #echo "Waiting for the Postgres server to start"
-    #sleep 1
-  #done
-  #echo "Running query: $i"
-  #/usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
-    #-o query_exec_seconds.txt \
-    #psql -p $PGPORT tpch <"$BASEDIR/$f"
-  #pg_ctl stop -D $PGDATADIR
-
   cgf="../q${ii}-callgraph.pdf"
   echo "Creating the call graph: $cgf"
   perf script | python "$BASEDIR/gprof2dot.py" -f perf | dot -Tpdf -o $cgf &
   cd - >/dev/null
 done
 
+# Execute all the queries sequentially as a group
+dir="$PERFDATADIR/qall"
+mkdir -p $dir
+cd "$dir"
+
+f="queries/qall.sql"
+
+/usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
+-o exectime.txt \
+postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+
+perf record -g postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+
+perf stat -B --log-fd 2 --\
+postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f" 2> stats.txt
+
+cgf="../qall-callgraph.pdf"
+echo "Creating the call graph: $cgf"
+perf script | python "$BASEDIR/gprof2dot.py" -f perf | dot -Tpdf -o $cgf &
+cd - >/dev/null
+
+# Wait for all pending jobs to finish.
 for p in $(jobs -p);
 do
   wait $p
 done
-
