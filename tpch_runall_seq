@@ -38,7 +38,7 @@ do
     postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
 
   ### Collect data with perf to generate callgraph
-  perf record -g postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+  perf record -g -m 512 postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
 
   ### Collect basic stats with perf
   perf stat -B --log-fd 2 --\
@@ -61,7 +61,7 @@ f="queries/qall.sql"
 -o exectime.txt \
 postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
 
-perf record -g postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+perf record -g -m 512 postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
 
 perf stat -B --log-fd 2 --\
 postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f" 2> stats.txt
