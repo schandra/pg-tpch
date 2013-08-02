@@ -14,7 +14,7 @@ sudo apt-get build-dep postgresql
 
 Install the dependencies of the scripts
 ```bash
-sudo apt-get install graphviz libreadline-dev zlib1g-dev pgtune
+sudo apt-get install graphviz libreadline-dev zlib1g-dev pgtune pgagent libpq5 libxslt1-dev
 ```
 
 Download, build, and install a custom version of Postgres
@@ -35,6 +35,16 @@ echo -e "\nexport PATH=\$HOME/pg92/bin:\$PATH" >>~/.bashrc
 Now logout and login. If you don't want to logout at this time, you should run run the following command in all new terminals, until you do logout and login again
 ```bash
 export PATH=$HOME/pg92/bin:$PATH
+```
+
+To install pgAdmin, download, build, and install from source
+```bash
+wget http://ftp.postgresql.org/pub/pgadmin3/release/v1.16.1/src/pgadmin3-1.16.1.tar.gz
+tar zxvf pgadmin3-1.16.1.tar.gz
+cd pgadmin3-1.16.1
+./configure --prefix=/usr
+make -j$(grep -c ^processor /proc/cpuinfo)
+sudo make install
 ```
 
 To install the 'perf' profiler and the dependencies
