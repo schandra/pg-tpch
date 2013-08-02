@@ -185,6 +185,8 @@ do
   ii=$(printf "%02d" $i)
   mkdir -p "../queries"
   DSS_QUERY=queries ./qgen $i >../queries/q$ii.sql
+  # create a file with all the queries in sequence
+  cat ../queries/q$ii.sql >> ../queries/qall.sql
 done
 
 printf 'Elapsed time: %s\n' $(timer $t)
