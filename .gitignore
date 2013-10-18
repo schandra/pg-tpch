@@ -3,4 +3,5 @@ dbgen/dbgen
 dbgen/qgen
 queries/
 perfdata*/
-
+stats/
+results/

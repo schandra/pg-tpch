@@ -19,22 +19,12 @@ sudo apt-get install graphviz libreadline-dev zlib1g-dev pgtune pgagent libpq5 l
 
 Download, build, and install a custom version of Postgres
 ```bash
-wget http://ftp.postgresql.org/pub/source/v9.2.1/postgresql-9.2.1.tar.bz2
-tar xf postgresql-9.2.1.tar.bz2
-cd postgresql-9.2.1/
-CFLAGS="-fno-omit-frame-pointer -rdynamic" ./configure --prefix=$HOME/pg92 --enable-debug
+wget http://ftp.postgresql.org/pub/source/v9.3.0/postgresql-9.3.0.tar.gz
+tar zxvf postgresql-9.3.0.tar.gz
+cd postgresql-9.3.0/
+CFLAGS="-fno-omit-frame-pointer -rdynamic" ./configure --prefix=/usr/local --enable-debug
 make -j$(grep -c ^processor /proc/cpuinfo)
-make install
-```
-
-Add Postgres to the path. I assume you are using bash (the default)
-```bash
-echo -e "\nexport PATH=\$HOME/pg92/bin:\$PATH" >>~/.bashrc
-```
-
-Now logout and login. If you don't want to logout at this time, you should run run the following command in all new terminals, until you do logout and login again
-```bash
-export PATH=$HOME/pg92/bin:$PATH
+sudo make install
 ```
 
 To install pgAdmin, download, build, and install from source

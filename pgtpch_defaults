@@ -1,18 +1,17 @@
 #!/bin/bash
 
-# stop on first error
-#set -e
-
 # Configuration variables
 # Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
 # are considered valid for comparative purposes.
-SCALE=1 #1GB
+SCALE=10 #GB
 
 # Other configuration variables
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
-TPCHTMP=$HOME/pg92/tmp
-PGDATADIR=$HOME/pg92/pgdata${SCALE}GB
+#TPCHTMP=/dev/shm/tpch_tmp
+#PGDATADIR=/dev/shm/pgdata${SCALE}GB
+TPCHTMP=/AXLE/tpch_tmp
+PGDATADIR=/AXLE/pgdata${SCALE}GB
 PGPORT=5442
 REMAKE_DATA=true
 DB_NAME="tpch"
@@ -20,18 +19,13 @@ POPULATE_DB=true
 CREATE_MIN_INDEXES=false
 CREATE_ALL_INDEXES=true
 PERFDATADIR=perfdata
-#DRIO_NVRAMSIM=$HOME/projects/DynamoRIO-Linux-4.0.0-7/nvramsim/build/libmemtrace.so
-#PIN_HOME=$HOME/projects/pin-2.12-55942-gcc.4.4.7-linux
-#PIN_EXE=$PIN_HOME/pin
-#PIN_NVRAMSIM=$PIN_HOME/source/tools/nvramsim/obj-intel64/nvramsim.so
 CORES=`grep -c ^processor /proc/cpuinfo`
+PGUSER="nobody"
 
-#
 # Install teardown() function to kill any lingering jobs
-#
 teardown() {
   echo "Cleaning up before exiting"
-  pg_ctl stop -m fast -D "$PGDATADIR" 2>/dev/null && sleep 1
+  sudo -u $PGUSER pg_ctl stop -m fast -D "$PGDATADIR" 2>/dev/null && sleep 1
   JOBS=$(jobs -p)
   test -z "$JOBS" || { kill $JOBS && sleep 2; }
   JOBS=$(jobs -p)
@@ -39,9 +33,7 @@ teardown() {
 }
 test -z "${DEBUG-}" && trap "teardown" EXIT
 
-#
 # Set up perf
-#
 perf_set_kernel_params() {
   if [ -r /proc/sys/kernel/kptr_restrict ] && [ $(cat /proc/sys/kernel/kptr_restrict) -ne 0 ]; then
     echo "Perf requires reading kernel symbols."
@@ -57,9 +49,20 @@ perf_set_kernel_params() {
   fi
 }
 
-#
+# Restart and drop caches
+restart_drop_caches() {
+    echo "Restart postgres and drop caches."
+    sudo -u $PGUSER pg_ctl stop -D $PGDATADIR
+    sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
+    sudo -u $PGUSER taskset -c 2 postgres -D "$PGDATADIR" -p $PGPORT &
+    PGPID=$!
+    while ! sudo -u $PGUSER pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
+        echo "Waiting for the Postgres server to start"
+        sleep 1
+    done
+}
+
 # Check for the running Postgres; exit if there is any on the given port
-#
 PGPORT_PROCLIST="$(lsof -i tcp:$PGPORT | tail -n +2 | awk '{print $2}')"
 if [[ $(echo "$PGPORT_PROCLIST" | wc -w) -gt 0 ]];
 then
@@ -73,14 +76,11 @@ then
   exit -1
 fi
 
-#
 # Check if a Postgres server is running in the same directory
-#
-if pg_ctl status -D $PGDATADIR | grep "server is running" -q; then
+if sudo -u $PGUSER pg_ctl status -D $PGDATADIR | grep "server is running" -q; then
   echo "A Postgres server is already running in the selected directory. Exiting."
-  pg_ctl status -D $PGDATADIR
+  sudo -u $PGUSER pg_ctl status -D $PGDATADIR
   exit -2
 fi
 
 cd "$BASEDIR"
-
