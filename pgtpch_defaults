@@ -8,10 +8,10 @@ SCALE=10 #GB
 # Other configuration variables
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
-#TPCHTMP=/dev/shm/tpch_tmp
-#PGDATADIR=/dev/shm/pgdata${SCALE}GB
-TPCHTMP=/AXLE/tpch_tmp
-PGDATADIR=/AXLE/pgdata${SCALE}GB
+#TPCHTMP=/dev/shm/$USER/tpch_tmp
+#PGDATADIR=/dev/shm/$USER/pgdata${SCALE}GB
+TPCHTMP=/AXLE/$USER/tpch_tmp
+PGDATADIR=/AXLE/$USER/pgdata${SCALE}GB
 PGPORT=5442
 REMAKE_DATA=true
 DB_NAME="tpch"
@@ -58,7 +58,7 @@ restart_drop_caches() {
     PGPID=$!
     while ! sudo -u $PGUSER pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
         echo "Waiting for the Postgres server to start"
-        sleep 1
+        sleep 3
     done
 }
 

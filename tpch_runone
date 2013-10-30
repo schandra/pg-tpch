@@ -1,68 +1,82 @@
 #!/bin/bash
 
+###
+# This script runs a single query
+#   * 1) Gather execution time using '/usr/bin/time'
+#   * 2) Collect data with perf to generate callgraph
+#   * 3) Collect a set of basic statistics, again using perf. For now we obtain
+#     the default given by perf, but this can be modified later to extract
+#     statistics of interest to us.
+###
+
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
 . "$BASEDIR/pgtpch_defaults"
 
-if [ $# -ne 1 ]; then
+if [ $# -lt 1 ]; then
   echo "Please provide the number of the query you wish to run, e.g.:"
-  echo "$0 6"
+  echo "$0 6 [dir-sufix]"
   exit 1
 fi
 
+# Set up a custom directory for this query run
+PERFDATADIR="$PERFDATADIR-${SCALE}GB"
+if [ $# -eq 2 ]; then
+  PERFDATADIR="$PERFDATADIR-$2"
+fi
+
 perf_set_kernel_params
+
+# Start a new instance of Postgres
+sudo -u $PGUSER taskset -c 2 postgres -D "$PGDATADIR" -p $PGPORT &
+PGPID=$!
+while ! sudo -u $PGUSER pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
+  echo "Waiting for the Postgres server to start"
+  sleep 1
+done
+
+# wait for it to finish starting
+sleep 5
+echo "Postgres running, pid $PGPID"
 
 ii=$(printf "%02d" $1)
 dir="$PERFDATADIR/q${ii}"
 mkdir -p $dir
 cd "$dir"
+chmod 777 .
 
 ### Query to be executed
 f="queries/q$ii.sql"
+fe="queries/q$ii.explain.sql"
 
-### run under dynamorio
-# drrun -c "$DRIO_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
-
-### run under pin
-#$PIN_EXE -follow_execv -mt -t "$PIN_NVRAMSIM" -- postgres -D $PGDATADIR -p $PGPORT &
-
-### Google Performance Tools
-# CPUPROFILE=/tmp/profile postgres -D $PGDATADIR -p $PGPORT &
-
-### Get execution time without perf
-/usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
-    -o exectime.txt \
-    postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+### Execute query with explain to get query plan
+echo "Execute query with explain to get query plan"
+sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME <"$BASEDIR/$fe" > explain.txt
+restart_drop_caches
 
 ### Collect data with perf to generate callgraph
-perf record -g postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f"
+echo "Collect data with perf to generate callgraph"
+/usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
+  sudo -u $PGUSER perf record -a -C 2 -s -g -m 512 --\
+  psql -h /tmp -p $PGPORT -d $DB_NAME <"$BASEDIR/$f" 2> exectime.txt
+restart_drop_caches
 
 ### Collect basic stats with perf
-perf stat -B --log-fd 2 --\
-    postgres --single -j -D $PGDATADIR $DB_NAME <"$BASEDIR/$f" 2> stats.txt
+echo "Collect basic stats with perf"
+sudo -u $PGUSER perf stat -a -C 2 -B --log-fd 2 --\
+  psql -h /tmp -p $PGPORT -d $DB_NAME <"$BASEDIR/$f" 2> stats.txt
+restart_drop_caches
 
-
-### The following is not necessary when running postgres with '--single'
-#pg_ctl -D $PGDATADIR status
-#while ! pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
-  #echo "Waiting for the Postgres server to start"
-  #pg_ctl -D $PGDATADIR status
-  #sleep 1
-#done
-#pg_ctl -D $PGDATADIR status
-#sleep 2
-#echo "Running query: $i"
-#/usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k'\
-  #-o query_exec_seconds.txt \
-  #psql -p $PGPORT tpch <"$BASEDIR/$f"
-#echo "Asking Pg server to stop"
-#pg_ctl stop -D $PGDATADIR
-#echo "Pg server stopped"
+sudo chown $USER:$USER *
+chmod 775 .
 
 cgf="../q${ii}-callgraph.pdf"
 echo "Creating the call graph: $cgf"
 perf script | python "$BASEDIR/gprof2dot.py" -f perf | dot -Tpdf -o $cgf &
 cd - >/dev/null
+
+# Stop the server
+sudo -u $PGUSER pg_ctl stop -D $PGDATADIR
 
 for p in $(jobs -p);
 do
