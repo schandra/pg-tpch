@@ -8,64 +8,38 @@ BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
 . "$BASEDIR/pgtpch_defaults"
 
+# Current time
+t=$(timer)
+
 # Initialize DB if $PGDATADIR does not exist
 if ! [ -d "$PGDATADIR" ]; then
   sudo -u $PGUSER mkdir -p "$PGDATADIR"
-  sudo -u $PGUSER initdb -D "$PGDATADIR" --encoding=UTF-8 --locale=C
+  sudo -u $PGUSER $PGBINDIR/initdb -D "$PGDATADIR" --encoding=UTF-8 --locale=C
   CREATE_NEW_DB=true
 else
   CREATE_NEW_DB=false
 fi
 
 # Start a new instance of Postgres
-sudo -u $PGUSER postgres -D "$PGDATADIR" -p $PGPORT &
+sudo -u $PGUSER $PGBINDIR/postgres -D "$PGDATADIR" -p $PGPORT &
 PGPID=$!
-while ! sudo -u $PGUSER pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
+while ! sudo -u $PGUSER $PGBINDIR/pg_ctl status -D $PGDATADIR | grep "server is running" -q; do
   echo "Waiting for the Postgres server to start"
-  sleep 1
+  sleep 2
 done
 
-# wait for it to finish starting
-sleep 2
-
 if $CREATE_NEW_DB; then
-  sudo -u $PGUSER createdb -h /tmp -p $PGPORT $PGUSER --encoding=UTF-8 --locale=C
+  sudo -u $PGUSER $PGBINDIR/createdb -h /tmp -p $PGPORT $PGUSER --encoding=UTF-8 --locale=C
 fi
 
-WAL_LEVEL_MINIMAL=`sudo -u $PGUSER psql -h /tmp -p $PGPORT -c 'show wal_level' -t | grep minimal | wc -l`
-DEBUG_ASSERTIONS=`sudo -u $PGUSER psql -h /tmp -p $PGPORT -c 'show debug_assertions' -t | grep on | wc -l`
+WAL_LEVEL_MINIMAL=`sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -c 'show wal_level' -t | grep minimal | wc -l`
+DEBUG_ASSERTIONS=`sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -c 'show debug_assertions' -t | grep on | wc -l`
 
 # disable resolving of *.tbl to '*.tbl' in case there are no matching files
 shopt -s nullglob
 
-function timer()
-{
-    if [[ $# -eq 0 ]]; then
-        echo $(date '+%s')
-    else
-        local  stime=$1
-        etime=$(date '+%s')
-
-        if [[ -z "$stime" ]]; then stime=$etime; fi
-
-        dt=$((etime - stime))
-        ds=$((dt % 60))
-        dm=$(((dt / 60) % 60))
-        dh=$((dt / 3600))
-        printf '%d:%02d:%02d' $dh $dm $ds
-    fi
-}
-
-t=$(timer)
-
-function die()
-{
-  echo "$@"
-  exit -1;
-}
-
 # Remind me of my current settings
-sudo -u $PGUSER psql -h /tmp -p $PGPORT -c "select name, current_setting(name) from pg_settings where name
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -c "select name, current_setting(name) from pg_settings where name
 in('debug_assertions', 'wal_level', 'checkpoint_segments', 'shared_buffers', 'wal_buffers',
 'fsync', 'maintenance_work_mem', 'checkpoint_completion_target',
 'max_connections');"
@@ -94,8 +68,25 @@ then
   cd "$TPCHTMP"
   sudo -u $PGUSER cp "$BASEDIR/dbgen/dists.dss" .
   # Run dbgen with "force", to overwrite existing files
-  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v
+  # Create table files separately to have better IO throughput
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T c &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T s &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T n &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T r &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T O &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T L &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T P &
+  sudo -u $PGUSER "$BASEDIR/dbgen/dbgen" -s $SCALE -f -v -T S &
 fi
+
+# Wait for all pending jobs to finish.
+for p in $(jobs -p);
+do
+  if [ $p != $PGPID ];
+  then
+      wait $p
+  fi
+done
 
 data_loading_configuration="
 checkpoint_segments = 300
@@ -104,12 +95,24 @@ checkpoint_completion_target = 0.9
 shared_buffers = 32GB
 maintenance_work_mem = 1GB
 "
+logging_configuration="
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'pg_log'
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+log_file_mode = 0600
+client_min_messages = notice
+log_min_messages = warning
+log_min_error_statement = error
+log_statement = 'all'
+log_timezone = 'Europe/Madrid'
+"
 
 if $POPULATE_DB
 then
-  echo "DROP DATABASE IF EXISTS $DB_NAME" | sudo -u $PGUSER psql -h /tmp -p $PGPORT
+  echo "DROP DATABASE IF EXISTS $DB_NAME" | sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT
   # Make sure we're all on the same page wrt encoding, collations, etc.
-  sudo -u $PGUSER createdb -h /tmp -p $PGPORT $DB_NAME --encoding=UTF-8 --locale=C
+  sudo -u $PGUSER $PGBINDIR/createdb -h /tmp -p $PGPORT $DB_NAME --encoding=UTF-8 --locale=C
   if [ $? != 0 ]; then
     # Did you forget to disconnect from the database before dropping?
     echo "Error: Can't proceed without database"
@@ -117,13 +120,18 @@ then
   fi
 
   TIME=`date`
-  sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME -c "comment on database $DB_NAME is 'TPC-H data, created at $TIME'"
-  sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME < "$BASEDIR/dbgen/dss.ddl"
+  sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "comment on database $DB_NAME is 'TPC-H data, created at $TIME'"
+  sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME < "$BASEDIR/dbgen/dss.ddl"
 
   # Configuration parameters for efficient data loading
-  #sudo -u $PGUSER chmod 666 $PGDATADIR/postgresql.conf
   echo "$data_loading_configuration" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
-  sudo -u $PGUSER pg_ctl reload -D $PGDATADIR
+
+  if $LOGGING
+  then
+      echo "$logging_configuration" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
+  fi
+
+  sudo -u $PGUSER $PGBINDIR/pg_ctl reload -D $PGDATADIR
 
   cd "$TPCHTMP"
   for f in *.tbl; do
@@ -131,8 +139,9 @@ then
     # We truncate the empty table in the sames transaction to enable Postgres to
     # safely skip WAL-logging. See
     # http://www.postgresql.org/docs/current/static/populate.html#POPULATE-PITR
-    echo "truncate $bf; COPY $bf FROM '$(pwd)/$f' WITH DELIMITER AS '|'" | sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME &
+    echo "truncate $bf; COPY $bf FROM '$(pwd)/$f' WITH DELIMITER AS '|'" | sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME &
   done
+
   # TODO: It would be nice if there was a way to limit the number of
   # concurrently executing jobs to $CORES. It is surprisingly easy to make COPY
   # CPU-bound.
@@ -140,6 +149,9 @@ then
     if [ $p == $PGPID ]; then continue; fi
     wait $p;
   done
+
+  # Create primary and foreign keys
+  sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME < "$BASEDIR/dbgen/dss.ri"
 fi
 
 cd "$BASEDIR"
@@ -150,42 +162,52 @@ sudo -u $PGUSER rm -rf "$TPCHTMP"
 if $CREATE_ALL_INDEXES
 then
 echo "Creating 'All' indexes..."
-sudo -u $PGUSER  psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_shipdate ON lineitem (l_shipdate);
-CREATE INDEX i_l_suppkey_partkey ON lineitem (l_partkey, l_suppkey);
-CREATE INDEX i_l_partkey ON lineitem (l_partkey);
-CREATE INDEX i_l_suppkey ON lineitem (l_suppkey);
-CREATE INDEX i_l_receiptdate ON lineitem (l_receiptdate);
-CREATE INDEX i_l_orderkey ON lineitem (l_orderkey);
-CREATE INDEX i_l_orderkey_quantity ON lineitem (l_orderkey, l_quantity);
-CREATE INDEX i_c_nationkey ON customer (c_nationkey);
-CREATE INDEX i_o_orderdate ON orders (o_orderdate);
-CREATE INDEX i_o_custkey ON orders (o_custkey);
-CREATE INDEX i_s_nationkey ON supplier (s_nationkey);
-CREATE INDEX i_ps_partkey ON partsupp (ps_partkey);
-CREATE INDEX i_ps_suppkey ON partsupp (ps_suppkey);
-CREATE INDEX i_n_regionkey ON nation (n_regionkey);
-CREATE INDEX i_l_commitdate ON lineitem (l_commitdate);
-CREATE INDEX i_n_nationkey ON nation (n_nationkey);
-CREATE INDEX i_r_regionkey ON region (r_regionkey);
-CREATE INDEX i_p_partkey ON part (p_partkey);
-CREATE INDEX i_s_suppkey ON supplier (s_suppkey);
-CREATE INDEX i_c_custkey ON customer (c_custkey);
-CREATE INDEX i_o_orderkey ON orders (o_orderkey);"
+# Primary key definitions already create indexes
+#sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_r_regionkey ON region (r_regionkey);" &
+#sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_n_nationkey ON nation (n_nationkey);" &
+#sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_p_partkey ON part (p_partkey);" &
+#sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_s_suppkey ON supplier (s_suppkey);" &
+#sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_c_custkey ON customer (c_custkey);" &
+#sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_o_orderkey ON orders (o_orderkey);" &
+
+# Pg does not create indexed on foreign keys, create them manually
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_n_regionkey ON nation (n_regionkey);" & # not used on 1GB
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_s_nationkey ON supplier (s_nationkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_c_nationkey ON customer (c_nationkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_ps_suppkey ON partsupp (ps_suppkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_ps_partkey ON partsupp (ps_partkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_o_custkey ON orders (o_custkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_orderkey ON lineitem (l_orderkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_suppkey_partkey ON lineitem (l_partkey, l_suppkey);" &
+
+# other indexes
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_shipdate ON lineitem (l_shipdate);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_partkey ON lineitem (l_partkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_suppkey ON lineitem (l_suppkey);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_receiptdate ON lineitem (l_receiptdate);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_orderkey_quantity ON lineitem (l_orderkey, l_quantity);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_o_orderdate ON orders (o_orderdate);" &
+sudo -u $PGUSER  $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX i_l_commitdate ON lineitem (l_commitdate);" & # not used on 1GB
 fi
 
 if $CREATE_MIN_INDEXES
 then
 echo "Creating 'Min' indexes..."
-sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX n_nationkey_idx on nation (n_nationkey);
-CREATE INDEX r_regionkey_idx on region (r_regionkey);
-CREATE INDEX p_partkey_idx on part (p_partkey);
-CREATE INDEX s_suppkey_idx on supplier (s_suppkey);
-CREATE INDEX ps_partkey_idx on partsupp (ps_partkey);
-CREATE INDEX c_custkey_idx on customer (c_custkey);
-CREATE INDEX o_orderkey_idx on orders (o_orderkey);
-CREATE INDEX l_orderkey_idx on lineitem (l_orderkey);
-CREATE INDEX l_partkey_idx on lineitem (l_partkey);"
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX n_nationkey_idx on nation (n_nationkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX r_regionkey_idx on region (r_regionkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX p_partkey_idx on part (p_partkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX s_suppkey_idx on supplier (s_suppkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX ps_partkey_idx on partsupp (ps_partkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX c_custkey_idx on customer (c_custkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX o_orderkey_idx on orders (o_orderkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX l_orderkey_idx on lineitem (l_orderkey);" &
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "CREATE INDEX l_partkey_idx on lineitem (l_partkey);" &
 fi
+
+for p in $(jobs -p); do
+    if [ $p == $PGPID ]; then continue; fi
+    wait $p;
+done
 
 # Configuration for query execution
 query_configuration="
@@ -196,7 +218,7 @@ default_statistics_target = 5000    #requires analyze to take effect
 maintenance_work_mem = 32MB
 "
 echo "$query_configuration" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
-sudo -u $PGUSER pg_ctl reload -D $PGDATADIR
+sudo -u $PGUSER $PGBINDIR/pg_ctl reload -D $PGDATADIR
 
 # Disable transparent huge pages
 echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
@@ -204,11 +226,11 @@ echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
 # Always analyze after bulk-loading; when hacking Postgres, typically Postgres
 # is run with autovacuum turned off.
 echo "Running vacuum freeze analyze..."
-sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME -c "vacuum freeze"
-sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME -c "analyze"
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "vacuum freeze"
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "analyze"
 # Checkpoint, so we have a "clean slate". Just in-case.
 echo "Checkpointing..."
-sudo -u $PGUSER psql -h /tmp -p $PGPORT -d $DB_NAME -c "checkpoint"
+sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME -c "checkpoint"
 
 cd "$BASEDIR/dbgen"
 for i in $(seq 1 22);
@@ -217,6 +239,7 @@ do
   mkdir -p "../queries"
   DSS_QUERY=queries ./qgen $i >../queries/q$ii.sql
   sed 's/^select/explain select/' ../queries/q$ii.sql > ../queries/q$ii.explain.sql
+  sed 's/^select/explain analyze select/' ../queries/q$ii.sql > ../queries/q$ii.analyze.sql
 done
 
 printf 'Elapsed time: %s\n' $(timer $t)
