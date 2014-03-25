@@ -20,7 +20,17 @@ PERFDATADIR=perfdata
 CORES=`grep -c ^processor /proc/cpuinfo`
 PGUSER="nobody"
 PGBINDIR=$HOME/bin/postgres-bs128/bin
-LOGGING=false
+
+# config file to append to postgresql.conf during data loading
+PGLOADCONF="postgres-load-bsc.conf"
+
+# config file to append to postgresql.conf after loading is done
+PGQUERYCONF="postgres-query-bsc.conf"
+
+# Logging config file (only applied during db population),
+# leave empty for not change
+#PG_LOG_CONF=postgres-log.conf
+PGLOGCONF=""
 
 # Install teardown() function to kill any lingering jobs
 teardown() {

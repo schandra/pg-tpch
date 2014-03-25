@@ -88,26 +88,6 @@ do
   fi
 done
 
-data_loading_configuration="
-checkpoint_segments = 300
-checkpoint_timeout = 3600s
-checkpoint_completion_target = 0.9
-shared_buffers = 32GB
-maintenance_work_mem = 1GB
-"
-logging_configuration="
-log_destination = 'stderr'
-logging_collector = on
-log_directory = 'pg_log'
-log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
-log_file_mode = 0600
-client_min_messages = notice
-log_min_messages = warning
-log_min_error_statement = error
-log_statement = 'all'
-log_timezone = 'Europe/Madrid'
-"
-
 if $POPULATE_DB
 then
   echo "DROP DATABASE IF EXISTS $DB_NAME" | sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT
@@ -124,11 +104,11 @@ then
   sudo -u $PGUSER $PGBINDIR/psql -h /tmp -p $PGPORT -d $DB_NAME < "$BASEDIR/dbgen/dss.ddl"
 
   # Configuration parameters for efficient data loading
-  echo "$data_loading_configuration" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
+  cat "$BASEDIR/$PGLOADCONF" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
 
-  if $LOGGING
+  if [ ! -z "$PGLOGCONF" ]
   then
-      echo "$logging_configuration" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
+      cat "$BASEDIR/$PGLOGCONF" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
   fi
 
   sudo -u $PGUSER $PGBINDIR/pg_ctl reload -D $PGDATADIR
@@ -210,14 +190,7 @@ for p in $(jobs -p); do
 done
 
 # Configuration for query execution
-query_configuration="
-checkpoint_timeout = 600s
-work_mem = 12GB                      #2 to 16GB
-effective_cache_size = 192GB        #3/4 of total RAM (192GB)
-default_statistics_target = 5000    #requires analyze to take effect
-maintenance_work_mem = 32MB
-"
-echo "$query_configuration" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
+cat "$BASEDIR/$PGQUERYCONF" | sudo -u $PGUSER tee -a $PGDATADIR/postgresql.conf
 sudo -u $PGUSER $PGBINDIR/pg_ctl reload -D $PGDATADIR
 
 # Disable transparent huge pages
