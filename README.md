@@ -1,4 +1,3 @@
-
 Instructions:
 
 To make this profiler work, you should compile PostgreSQL from source.
@@ -22,7 +21,7 @@ Download, build, and install a custom version of Postgres
 wget http://ftp.postgresql.org/pub/source/v9.3.0/postgresql-9.3.0.tar.gz
 tar zxvf postgresql-9.3.0.tar.gz
 cd postgresql-9.3.0/
-CFLAGS="-fno-omit-frame-pointer -rdynamic" ./configure --prefix=/usr/local --enable-debug
+CFLAGS="-fno-omit-frame-pointer -rdynamic -O2" ./configure --prefix=/usr/local --enable-debug
 make -j$(grep -c ^processor /proc/cpuinfo)
 sudo make install
 ```
