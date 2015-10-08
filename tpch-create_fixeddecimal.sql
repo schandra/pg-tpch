@@ -1,77 +1,77 @@
 CREATE TABLE supplier (
-        s_suppkey  INTEGER,
-        s_name CHAR(25),
-        s_address VARCHAR(40),
-        s_nationkey INTEGER,
-        s_phone CHAR(15),
-        s_acctbal FIXEDDECIMAL,
-        s_comment VARCHAR(101));
+        s_suppkey  INTEGER NOT NULL,
+        s_name CHAR(25) NOT NULL,
+        s_address VARCHAR(40) NOT NULL,
+        s_nationkey INTEGER NOT NULL,
+        s_phone CHAR(15) NOT NULL,
+        s_acctbal FIXEDDECIMAL NOT NULL,
+        s_comment VARCHAR(101) NOT NULL);
 
 CREATE TABLE part (
-        p_partkey INTEGER,
-        p_name VARCHAR(55),
-        p_mfgr CHAR(25),
-        p_brand CHAR(10),
-        p_type VARCHAR(25),
-        p_size INTEGER,
-        p_container CHAR(10),
-        p_retailprice FIXEDDECIMAL,
-        p_comment VARCHAR(23));
+        p_partkey INTEGER NOT NULL,
+        p_name VARCHAR(55) NOT NULL,
+        p_mfgr CHAR(25) NOT NULL,
+        p_brand CHAR(10) NOT NULL,
+        p_type VARCHAR(25) NOT NULL,
+        p_size INTEGER NOT NULL,
+        p_container CHAR(10) NOT NULL,
+        p_retailprice FIXEDDECIMAL NOT NULL,
+        p_comment VARCHAR(23) NOT NULL);
 
 CREATE TABLE partsupp (
-        ps_partkey INTEGER,
-        ps_suppkey INTEGER,
-        ps_availqty INTEGER,
-        ps_supplycost FIXEDDECIMAL,
-        ps_comment VARCHAR(199));
+        ps_partkey INTEGER NOT NULL,
+        ps_suppkey INTEGER NOT NULL,
+        ps_availqty INTEGER NOT NULL,
+        ps_supplycost FIXEDDECIMAL NOT NULL,
+        ps_comment VARCHAR(199) NOT NULL);
 
 CREATE TABLE customer (
-        c_custkey INTEGER,
-        c_name VARCHAR(25),
-        c_address VARCHAR(40),
-        c_nationkey INTEGER,
-        c_phone CHAR(15),
-        c_acctbal FIXEDDECIMAL,
-        c_mktsegment CHAR(10),
-        c_comment VARCHAR(117));
+        c_custkey INTEGER NOT NULL,
+        c_name VARCHAR(25) NOT NULL,
+        c_address VARCHAR(40) NOT NULL,
+        c_nationkey INTEGER NOT NULL,
+        c_phone CHAR(15) NOT NULL,
+        c_acctbal FIXEDDECIMAL NOT NULL,
+        c_mktsegment CHAR(10) NOT NULL,
+        c_comment VARCHAR(117) NOT NULL);
 
 CREATE TABLE orders (
-        o_orderkey BIGINT,
-        o_custkey INTEGER,
-        o_orderstatus CHAR(1),
-        o_totalprice FIXEDDECIMAL,
-        o_orderdate DATE,
-        o_orderpriority CHAR(15),
-        o_clerk CHAR(15),
-        o_shippriority INTEGER,
-        o_comment VARCHAR(79));
+        o_orderkey BIGINT NOT NULL,
+        o_custkey INTEGER NOT NULL,
+        o_orderstatus CHAR(1) NOT NULL,
+        o_totalprice FIXEDDECIMAL NOT NULL,
+        o_orderdate DATE NOT NULL,
+        o_orderpriority CHAR(15) NOT NULL,
+        o_clerk CHAR(15) NOT NULL,
+        o_shippriority INTEGER NOT NULL,
+        o_comment VARCHAR(79) NOT NULL);
 
 CREATE TABLE lineitem (
-        l_orderkey BIGINT,
-        l_partkey INTEGER,
-        l_suppkey INTEGER,
-        l_linenumber INTEGER,
-        l_quantity FIXEDDECIMAL,
-        l_extendedprice FIXEDDECIMAL,
-        l_discount FIXEDDECIMAL,
-        l_tax FIXEDDECIMAL,
-        l_returnflag CHAR(1),
-        l_linestatus CHAR(1),
-        l_shipdate DATE,
-        l_commitdate DATE,
-        l_receiptdate DATE,
-        l_shipinstruct CHAR(25),
-        l_shipmode CHAR(10),
-        l_comment VARCHAR(44));
+        l_orderkey BIGINT NOT NULL,
+        l_partkey INTEGER NOT NULL,
+        l_suppkey INTEGER NOT NULL,
+        l_linenumber INTEGER NOT NULL,
+        l_quantity FIXEDDECIMAL NOT NULL,
+        l_extendedprice FIXEDDECIMAL NOT NULL,
+        l_discount FIXEDDECIMAL NOT NULL,
+        l_tax FIXEDDECIMAL NOT NULL,
+        l_returnflag CHAR(1) NOT NULL,
+        l_linestatus CHAR(1) NOT NULL,
+        l_shipdate DATE NOT NULL,
+        l_commitdate DATE NOT NULL,
+        l_receiptdate DATE NOT NULL,
+        l_shipinstruct CHAR(25) NOT NULL,
+        l_shipmode CHAR(10) NOT NULL,
+        l_comment VARCHAR(44) NOT NULL);
 
 CREATE TABLE nation (
-        n_nationkey INTEGER,
-        n_name CHAR(25),
-        n_regionkey INTEGER,
-        n_comment VARCHAR(152));
+        n_nationkey INTEGER NOT NULL,
+        n_name CHAR(25) NOT NULL,
+        n_regionkey INTEGER NOT NULL,
+        n_comment VARCHAR(152) NOT NULL);
 
 CREATE TABLE region (
-        r_regionkey INTEGER,
-        r_name CHAR(25),
-        r_comment VARCHAR(152));
+        r_regionkey INTEGER NOT NULL,
+        r_name CHAR(25) NOT NULL,
+        r_comment VARCHAR(152) NOT NULL);
 

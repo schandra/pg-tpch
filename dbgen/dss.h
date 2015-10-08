@@ -84,7 +84,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define EOL_HANDLING
+//#define EOL_HANDLING
 #define  NONE		-1
 #define  PART		0
 #define  PSUPP		1

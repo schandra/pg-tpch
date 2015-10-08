@@ -8,6 +8,8 @@ import psycopg2
 
 # pool size
 nprocesses = 16 
+db_connect_str = "dbname=tpch host=localhost"
+
 
 commands = [
 "CREATE INDEX customer_c_mktsegment_c_custkey_idx ON customer (c_mktsegment, c_custkey) WITH (fillfactor = 100);",
@@ -45,7 +47,7 @@ def run_commands(i, queue_in, queue_out):
 
 		try:
 
-				conn = psycopg2.connect('dbname=tpch')
+				conn = psycopg2.connect(db_connect_str)
 				cur  = conn.cursor()
 
 				# iterate over results from the queue

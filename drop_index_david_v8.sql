@@ -1,0 +1,38 @@
+ALTER TABLE customer DROP CONSTRAINT pk_customer;
+ALTER TABLE nation DROP CONSTRAINT pk_nation;
+ALTER TABLE orders DROP CONSTRAINT pk_orders;
+ALTER TABLE part DROP CONSTRAINT pk_part;
+ALTER TABLE partsupp DROP CONSTRAINT pk_partsupp;
+ALTER TABLE region DROP CONSTRAINT pk_region;
+ALTER TABLE supplier DROP CONSTRAINT pk_supplier;
+ALTER TABLE lineitem DROP CONSTRAINT pk_lineitem;
+
+DROP INDEX customer_c_mktsegment_c_custkey_idx CASCADE;
+DROP INDEX customer_c_nationkey_c_custkey_idx CASCADE;
+DROP INDEX customer_ios_test1 CASCADE;
+DROP INDEX pk_customer CASCADE;
+DROP INDEX line_item_l_orderkey_l_suppkey_idx CASCADE;
+DROP INDEX lineitem_l_orderkey_idx_l_returnflag CASCADE;
+DROP INDEX lineitem_l_orderkey_idx_part1 CASCADE;
+DROP INDEX lineitem_l_orderkey_idx_part2 CASCADE;
+DROP INDEX lineitem_l_partkey_l_quantity_l_shipmode_idx CASCADE;
+DROP INDEX lineitem_l_partkey_l_suppkey_l_shipdate_l_quantity_idx CASCADE;
+DROP INDEX lineitem_l_shipdate_idx CASCADE;
+DROP INDEX pk_lineitem CASCADE;
+DROP INDEX pk_nation CASCADE;
+DROP INDEX orders_o_custkey_idx CASCADE;
+DROP INDEX orders_o_orderkey_o_orderdate_idx CASCADE;
+DROP INDEX orders_o_orderdate_idx CASCADE;
+DROP INDEX pk_orders CASCADE;
+DROP INDEX part_ios_test1 CASCADE;
+DROP INDEX part_p_container_p_brand_p_partkey_idx CASCADE;
+DROP INDEX part_p_size_idx CASCADE;
+DROP INDEX part_p_type_p_partkey_idx CASCADE;
+DROP INDEX pk_part CASCADE;
+DROP INDEX partsupp_ps_suppkey_idx CASCADE;
+DROP INDEX pk_partsupp CASCADE;
+DROP INDEX pk_region CASCADE;
+DROP INDEX pk_supplier CASCADE;
+DROP INDEX supplier_s_nationkey_s_suppkey_idx CASCADE;
+DROP INDEX supplier_s_suppkey_idx_like CASCADE;
+
