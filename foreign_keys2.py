@@ -12,9 +12,9 @@ db_connect_str = "dbname=tpch host=localhost"
 
 
 commands = [
-"ALTER TABLE nation ADD CONSTRAINT nation_n_regionkey_fkey FOREIGN KEY (n_regionkey) REFERENCES region(r_regionkey)",
-"ALTER TABLE partsupp ADD CONSTRAINT partsupp_ps_partkey_fkey FOREIGN KEY (ps_partkey) REFERENCES part(p_partkey)",
-"ALTER TABLE lineitem ADD CONSTRAINT lineitem_l_suppkey_fkey FOREIGN KEY (l_suppkey) REFERENCES supplier(s_suppkey)"
+"ALTER TABLE customer ADD CONSTRAINT customer_c_nationkey_fkey FOREIGN KEY (c_nationkey) REFERENCES nation(n_nationkey)",
+"ALTER TABLE lineitem ADD CONSTRAINT lineitem_l_orderkey_fkey FOREIGN KEY (l_orderkey) REFERENCES orders(o_orderkey)",
+"ALTER TABLE partsupp ADD CONSTRAINT partsupp_ps_suppkey_fkey FOREIGN KEY (ps_suppkey) REFERENCES supplier(s_suppkey)"
 ]
 
 
