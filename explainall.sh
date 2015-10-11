@@ -10,7 +10,7 @@
 ###
 
 DB_NAME=tpch
-PERFDATADIR=/data/sekondquad/pgtpch/results
+PERFDATADIR=/home/david/pgtpch/results
 
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
