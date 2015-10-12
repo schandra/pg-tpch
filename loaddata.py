@@ -8,7 +8,7 @@ import psycopg2
 
 # pool size
 nprocesses = 16
-dbgen_path = "/home/david/pgtpch/dbgen/"
+dbgen_path = "/home/postgres/pg-tpch/dbgen/"
 dbgen_size = "3000"
 db_connect_str = "dbname=tpch host=localhost"
 

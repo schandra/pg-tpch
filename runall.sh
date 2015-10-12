@@ -10,7 +10,7 @@
 ###
 
 DB_NAME=tpch
-PERFDATADIR=/data/sekondquad/pg-tpch/results
+PERFDATADIR=/home/postgres/tpch-results/
 
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
