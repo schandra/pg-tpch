@@ -55,23 +55,23 @@ EOF
 
 done
 
-for i in $(seq 1 22);
-do
-  echo "Running query (EXPLAIN ANALYZE): $i"
-
-  ii=$(printf "%02d" $i)
-  dir="$PERFDATADIR/q${ii}"
-  mkdir -p $dir
-  cd "$dir"
-  chmod 777 .
-
-  f="queries/q$ii.analyze.sql"
-
-  ### Execute query with explain analyze to get query plan
-  echo "Execute query with explain analyze to get query plan"
-  psql -d $DB_NAME > /dev/null 2> analyze.txt <<EOF
-set statement_timeout=86400000;
-\i $BASEDIR/$f
-EOF
-
-done
+## for i in $(seq 1 22);
+## do
+##   echo "Running query (EXPLAIN ANALYZE): $i"
+## 
+##   ii=$(printf "%02d" $i)
+##   dir="$PERFDATADIR/q${ii}"
+##   mkdir -p $dir
+##   cd "$dir"
+##   chmod 777 .
+## 
+##   f="queries/q$ii.analyze.sql"
+## 
+##   ### Execute query with explain analyze to get query plan
+##   echo "Execute query with explain analyze to get query plan"
+##   psql -d $DB_NAME > /dev/null 2> analyze.txt <<EOF
+## set statement_timeout=86400000;
+## \i $BASEDIR/$f
+## EOF
+## 
+## done
