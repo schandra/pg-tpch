@@ -1,6 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
+SET statement_timeout = 600s;
 select
 	sum(l_extendedprice * l_discount) as revenue
 from

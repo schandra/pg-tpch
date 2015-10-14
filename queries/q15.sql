@@ -1,5 +1,6 @@
 -- using 1433771997 as a seed to the RNG
 
+SET statement_timeout = 600s;
 create view revenue0 (supplier_no, total_revenue) as
 	select
 		l_suppkey,

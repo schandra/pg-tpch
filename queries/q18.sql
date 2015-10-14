@@ -1,6 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
+SET statement_timeout = 2400s;
 select
 	c_name,
 	c_custkey,
