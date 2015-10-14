@@ -10,7 +10,7 @@ mkdir tpch-env
 virtualenv tpch-env
 source tpch-env/bin/activate
 
-pip intiall psycopg2
+pip install psycopg2
 
 export PGPORT=20002
 
