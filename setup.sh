@@ -19,9 +19,9 @@ dropdb tpch
 
 # create database, tables, load data, create indexes etc
 #
-time sh loadall.sh
+time bash loadall.sh
 
 # run queries
-time sh runall.sh
+time bash runall.sh
 
 deactivate

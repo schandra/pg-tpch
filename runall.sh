@@ -68,7 +68,7 @@ EOF
 
   for n in $hostnames;
   do
-		ssh $n "killall -9 sar"
+		ssh $n "pkill -9 sar"
   done
   
 done
