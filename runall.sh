@@ -76,9 +76,7 @@ done
 j=0
 for n in $hostnames;
 do
-    m=${nodenames[$j]}
-	let j=$j+1
-	scp -r $n:$PERFDATADIR/sar/$n/$m/* $PERFDATADIR/sar/$n/$m
+	rsync -avzh $n:$PERFDATADIR/sar/$n $PERFDATADIR/sar
 done
 
 ## for i in $(seq 1 22);
