@@ -34,8 +34,21 @@ do
 
 done
 
+nodenames=(`psql -t -c 'select node_name from pgxc_node order by oid' $DB_NAME`);
+hostnames=`psql -t -c 'select node_host from pgxc_node order by oid' $DB_NAME`;
+
 for i in $(seq 1 22);
 do
+  echo "Start collecting stats";
+  j=0
+  for n in $hostnames;
+  do
+    m=${nodenames[$j]}
+	let j=$j+1
+    ssh $n "mkdir -p $PERFDATADIR/sar/$n/$m/q$i && chmod 777 $PERFDATADIR/sar/$n/$m/q$i"
+    ssh $n "sar -o $PERFDATADIR/sar/$n/$m/q$i/sar_raw.out 30 > /dev/null 2>&1 &"
+  done
+
   echo "Running query (EXEC): $i"
 
   ii=$(printf "%02d" $i)
@@ -53,6 +66,19 @@ set statement_timeout=86400000;
 \i $BASEDIR/$f
 EOF
 
+  for n in $hostnames;
+  do
+		ssh $n "killall -9 sar"
+  done
+  
+done
+
+j=0
+for n in $hostnames;
+do
+    m=${nodenames[$j]}
+	let j=$j+1
+	scp -r $n:$PERFDATADIR/sar/$n/$m/* $PERFDATADIR/sar/$n/$m
 done
 
 ## for i in $(seq 1 22);
