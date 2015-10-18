@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "3600s";
+SET statement_timeout = "30104s";
 select
 	cntrycode,
 	count(*) as numcust,

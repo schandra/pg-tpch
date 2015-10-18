@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "1200s";
+SET statement_timeout = "10483s";
 select
 	c_count,
 	count(*) as custdist
