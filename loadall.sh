@@ -1,5 +1,8 @@
 echo Creating database tpch...
 createdb tpch
+echo Creating tablespaces..
+psql tpch -c "create tablespace ts_disk1 LOCATION '/data_tblspc1/data'" 
+psql tpch -c "create tablespace ts_disk2 LOCATION '/data_tblspc2/data'" 
 echo Creating fixeddecimal extension...
 psql tpch -c "create extension fixeddecimal;"
 echo Building TPC-H schema...
@@ -17,7 +20,7 @@ time python foreign_keys.py
 time python foreign_keys2.py
 time python foreign_keys3.py
 echo Applying NDISTINCT fix...
-psql tpch -f ndistinct-fix-3tb.sql
+psql tpch -f ndistinct-fix-30tb.sql
 echo Performing ANALYZE of tpch database...
 time python analyze.py
 echo Done.

@@ -5,7 +5,7 @@ CREATE TABLE supplier (
         s_nationkey INTEGER NOT NULL,
         s_phone CHAR(15) NOT NULL,
         s_acctbal FIXEDDECIMAL NOT NULL,
-        s_comment VARCHAR(101) NOT NULL) DISTRIBUTE BY REPLICATION;
+        s_comment VARCHAR(101) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
 
 CREATE TABLE part (
         p_partkey INTEGER NOT NULL,
@@ -16,14 +16,14 @@ CREATE TABLE part (
         p_size INTEGER NOT NULL,
         p_container CHAR(10) NOT NULL,
         p_retailprice FIXEDDECIMAL NOT NULL,
-        p_comment VARCHAR(23) NOT NULL) DISTRIBUTE BY HASH (p_partkey);
+        p_comment VARCHAR(23) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY HASH (p_partkey);
 
 CREATE TABLE partsupp (
         ps_partkey INTEGER NOT NULL,
         ps_suppkey INTEGER NOT NULL,
         ps_availqty INTEGER NOT NULL,
         ps_supplycost FIXEDDECIMAL NOT NULL,
-        ps_comment VARCHAR(199) NOT NULL) DISTRIBUTE BY HASH (ps_partkey);
+        ps_comment VARCHAR(199) NOT NULL) TABLESPACE ts_disk2 DISTRIBUTE BY HASH (ps_partkey);
 
 CREATE TABLE customer (
         c_custkey INTEGER NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE customer (
         c_phone CHAR(15) NOT NULL,
         c_acctbal FIXEDDECIMAL NOT NULL,
         c_mktsegment CHAR(10) NOT NULL,
-        c_comment VARCHAR(117) NOT NULL) DISTRIBUTE BY REPLICATION;
+        c_comment VARCHAR(117) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
 
 CREATE TABLE orders (
         o_orderkey BIGINT NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE orders (
         o_orderpriority CHAR(15) NOT NULL,
         o_clerk CHAR(15) NOT NULL,
         o_shippriority INTEGER NOT NULL,
-        o_comment VARCHAR(79) NOT NULL) DISTRIBUTE BY HASH (o_orderkey);
+        o_comment VARCHAR(79) NOT NULL) TABLESPACE ts_disk2 DISTRIBUTE BY HASH (o_orderkey);
 
 CREATE TABLE lineitem (
         l_orderkey BIGINT NOT NULL,
@@ -62,16 +62,16 @@ CREATE TABLE lineitem (
         l_receiptdate DATE NOT NULL,
         l_shipinstruct CHAR(25) NOT NULL,
         l_shipmode CHAR(10) NOT NULL,
-        l_comment VARCHAR(44) NOT NULL) DISTRIBUTE BY HASH (l_orderkey);
+        l_comment VARCHAR(44) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY HASH (l_orderkey);
 
 CREATE TABLE nation (
         n_nationkey INTEGER NOT NULL,
         n_name CHAR(25) NOT NULL,
         n_regionkey INTEGER NOT NULL,
-        n_comment VARCHAR(152) NOT NULL) DISTRIBUTE BY REPLICATION;
+        n_comment VARCHAR(152) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
 
 CREATE TABLE region (
         r_regionkey INTEGER NOT NULL,
         r_name CHAR(25) NOT NULL,
-        r_comment VARCHAR(152) NOT NULL) DISTRIBUTE BY REPLICATION;
+        r_comment VARCHAR(152) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
 
