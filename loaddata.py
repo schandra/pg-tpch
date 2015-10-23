@@ -7,10 +7,10 @@ from multiprocessing import Process, Queue
 import psycopg2
 
 # pool size
-nprocesses = 1
-dbgen_path = "/Users/pavan/work/SOURCES/pg-tpch/dbgen/"
-dbgen_size = "1"
-db_connect_str = "dbname=tpch host=localhost port=30001"
+nprocesses = 32
+dbgen_path = "/home/postgres/pg-tpch/dbgen/"
+dbgen_size = "100"
+db_connect_str = "dbname=tpch host=localhost"
 
 commands = [
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 1' DELIMITER '|';",
