@@ -33,7 +33,7 @@ CREATE TABLE customer (
         c_phone CHAR(15) NOT NULL,
         c_acctbal FIXEDDECIMAL NOT NULL,
         c_mktsegment CHAR(10) NOT NULL,
-        c_comment VARCHAR(117) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
+        c_comment VARCHAR(117) NOT NULL) TABLESPACE ts_disk2 DISTRIBUTE BY REPLICATION;
 
 CREATE TABLE orders (
         o_orderkey BIGINT NOT NULL,
