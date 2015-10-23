@@ -1,0 +1,16 @@
+alter table lineitem alter  l_orderkey       set (n_distinct = 600000000);
+alter table lineitem alter  l_partkey        set (n_distinct = 80000000);
+alter table lineitem alter  l_extendedprice  set (n_distinct = 19445815);
+alter table lineitem alter  l_comment        set (n_distinct = 1325637570);
+alter table customer alter  c_address        set (n_distinct = 60000000);
+alter table customer alter  c_acctbal        set (n_distinct = 30226870);
+alter table customer alter  c_comment        set (n_distinct = 59852249);
+alter table orders   alter  o_totalprice     set (n_distinct = 422718900);
+alter table orders   alter  o_comment        set (n_distinct = 560754120);
+alter table part     alter  p_retailprice    set (n_distinct = 498901);
+alter table part     alter  p_comment        set (n_distinct = 30025409);
+alter table partsupp alter  ps_partkey       set (n_distinct = 80000000);
+alter table partsupp alter  ps_suppkey       set (n_distinct = 4000000);
+alter table partsupp alter  ps_supplycost    set (n_distinct = 101461);
+alter table partsupp alter  ps_comment       set (n_distinct = 316232564);
+alter table supplier alter  s_acctbal        set (n_distinct = 3806351);
