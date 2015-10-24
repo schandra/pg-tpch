@@ -68,10 +68,10 @@ CREATE TABLE nation (
         n_nationkey INTEGER NOT NULL,
         n_name CHAR(25) NOT NULL,
         n_regionkey INTEGER NOT NULL,
-        n_comment VARCHAR(152) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
+        n_comment VARCHAR(152) NOT NULL) DISTRIBUTE BY REPLICATION;
 
 CREATE TABLE region (
         r_regionkey INTEGER NOT NULL,
         r_name CHAR(25) NOT NULL,
-        r_comment VARCHAR(152) NOT NULL) TABLESPACE ts_disk1 DISTRIBUTE BY REPLICATION;
+        r_comment VARCHAR(152) NOT NULL) DISTRIBUTE BY REPLICATION;
 
