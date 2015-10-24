@@ -7,10 +7,16 @@ from multiprocessing import Process, Queue
 import psycopg2
 
 # pool size
-nprocesses = 32
+nprocesses = 16
 dbgen_path = "/home/postgres/pg-tpch/dbgen/"
-dbgen_size = "100"
-db_connect_str = "dbname=tpch host=localhost"
+dbgen_size = "30000"
+db_port = '20002'
+db_hosts = [
+				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
+				"xlcloud10", "xlcloud11", "xlcloud12", "xlcloud13", "xlcloud14", "xlcloud15", "xlcloud16", "xlcloud17"
+		]
+
+db_connect_str = "dbname=tpch "
 
 commands = [
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 1' DELIMITER '|';",
@@ -21,14 +27,6 @@ commands = [
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 6' DELIMITER '|';",
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 7' DELIMITER '|';",
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 8' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 9' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 10' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 11' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 12' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 13' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 14' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 15' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 16' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 1' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 2' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 3' DELIMITER '|';",
@@ -37,6 +35,14 @@ commands = [
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 6' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 7' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 8' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 9' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 10' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 11' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 12' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 13' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 14' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 15' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 16' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 9' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 10' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 11' DELIMITER '|';",
@@ -53,14 +59,6 @@ commands = [
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 22' DELIMITER '|';",
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 23' DELIMITER '|';",
                                 "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 24' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 25' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 26' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 27' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 28' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 29' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 30' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 31' DELIMITER '|';",
-                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 32' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 17' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 18' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 19' DELIMITER '|';",
@@ -69,6 +67,14 @@ commands = [
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 22' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 23' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 24' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 25' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 26' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 27' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 28' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 29' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 30' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 31' DELIMITER '|';",
+                                "COPY lineitem FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T L -o -b " + dbgen_path + "dists.dss -C 32 -S 32' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 25' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 26' DELIMITER '|';",
                                 "COPY customer FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T c -o -b " + dbgen_path + "dists.dss -C 32 -S 27' DELIMITER '|';",
@@ -117,7 +123,7 @@ def run_commands(i, queue_in, queue_out):
 
 		try:
 
-				conn = psycopg2.connect(db_connect_str)
+				conn = psycopg2.connect(db_connect_str + 'host = ' + db_hosts[i] + ' port = ' + db_port)
 				cur  = conn.cursor()
 
 				# iterate over results from the queue

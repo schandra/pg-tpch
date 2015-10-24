@@ -8,7 +8,13 @@ import psycopg2
 
 # pool size
 nprocesses = 16
-db_connect_str = "dbname=tpch host=localhost"
+db_port = '20002'
+db_hosts = [
+				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
+				"xlcloud10", "xlcloud11", "xlcloud12", "xlcloud13", "xlcloud14", "xlcloud15", "xlcloud16", "xlcloud17"
+		]
+
+db_connect_str = "dbname=tpch "
 
 
 commands = [
@@ -27,7 +33,7 @@ def run_commands(i, queue_in, queue_out):
 
 		try:
 
-				conn = psycopg2.connect(db_connect_str)
+				conn = psycopg2.connect(db_connect_str + 'host = ' + db_hosts[i] + ' port = ' + db_port)
 				cur  = conn.cursor()
 
 				# iterate over results from the queue

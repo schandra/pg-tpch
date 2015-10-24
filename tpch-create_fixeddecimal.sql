@@ -23,7 +23,7 @@ CREATE TABLE partsupp (
         ps_suppkey INTEGER NOT NULL,
         ps_availqty INTEGER NOT NULL,
         ps_supplycost FIXEDDECIMAL NOT NULL,
-        ps_comment VARCHAR(199) NOT NULL) TABLESPACE ts_disk2 DISTRIBUTE BY HASH (ps_partkey);
+        ps_comment VARCHAR(199) NOT NULL) DISTRIBUTE BY HASH (ps_partkey);
 
 CREATE TABLE customer (
         c_custkey INTEGER NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE orders (
         o_orderpriority CHAR(15) NOT NULL,
         o_clerk CHAR(15) NOT NULL,
         o_shippriority INTEGER NOT NULL,
-        o_comment VARCHAR(79) NOT NULL) TABLESPACE ts_disk2 DISTRIBUTE BY HASH (o_orderkey);
+        o_comment VARCHAR(79) NOT NULL) DISTRIBUTE BY HASH (o_orderkey);
 
 CREATE TABLE lineitem (
         l_orderkey BIGINT NOT NULL,
