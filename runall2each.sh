@@ -10,7 +10,7 @@
 ###
 
 DB_NAME=tpch
-PERFDATADIR=/home/david/pgtpch/results
+PERFDATADIR=/home/david/pgtpch/results2
 
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
@@ -54,9 +54,15 @@ do
   ### Get execution time without perf
   /usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k' \
     psql -d $DB_NAME > /dev/null 2> exectime.txt <<EOF
-set statement_timeout=86400000;
+set statement_timeout=3600000;
 \i $BASEDIR/$f
 EOF
+  /usr/bin/time -f '%e\n%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k' \
+    psql -d $DB_NAME > /dev/null 2> exectime2.txt <<EOF
+set statement_timeout=3600000;
+\i $BASEDIR/$f
+EOF
+
 
 done
 
@@ -75,7 +81,7 @@ do
   ### Execute query with explain analyze to get query plan
   echo "Execute query with explain analyze to get query plan"
   psql -d $DB_NAME > /dev/null 2> analyze.txt <<EOF
-set statement_timeout=86400000;
+set statement_timeout=3600000;
 \i $BASEDIR/$f
 EOF
 

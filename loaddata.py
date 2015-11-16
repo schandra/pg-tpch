@@ -7,9 +7,9 @@ from multiprocessing import Process, Queue
 import psycopg2
 
 # pool size
-nprocesses = 16
+nprocesses = 4
 dbgen_path = "/home/david/pgtpch/dbgen/"
-dbgen_size = "3000"
+dbgen_size = "100"
 db_connect_str = "dbname=tpch host=localhost"
 
 commands = [
