@@ -14,7 +14,7 @@ CREATE TABLE part (
         p_mfgr CHAR(25) NOT NULL,
         p_brand CHAR(10) NOT NULL,
         p_type VARCHAR(25) NOT NULL,
-        p_size FIXEDDECIMAL NOT NULL,
+        p_size INT NOT NULL,
         p_container CHAR(10) NOT NULL,
         p_retailprice FIXEDDECIMAL NOT NULL,
         p_comment VARCHAR(23) NOT NULL
