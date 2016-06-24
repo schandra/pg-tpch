@@ -7,11 +7,10 @@ from multiprocessing import Process, Queue
 import psycopg2
 
 # pool size
-nprocesses = 16
+nprocesses = 8
 db_port = '20002'
 db_hosts = [
-				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
-				"xlcloud10", "xlcloud11", "xlcloud12", "xlcloud13", "xlcloud14", "xlcloud15", "xlcloud16", "xlcloud17"
+				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9"
 		]
 
 db_connect_str = "dbname=tpch "

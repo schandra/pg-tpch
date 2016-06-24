@@ -7,13 +7,15 @@ from multiprocessing import Process, Queue
 import psycopg2
 
 # pool size
-nprocesses = 16
+nprocesses = 32
 dbgen_path = "/home/postgres/pg-tpch/dbgen/"
-dbgen_size = "30000"
+dbgen_size = "100"
 db_port = '20002'
 db_hosts = [
 				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
-				"xlcloud10", "xlcloud11", "xlcloud12", "xlcloud13", "xlcloud14", "xlcloud15", "xlcloud16", "xlcloud17"
+				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
+				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
+				"xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9"
 		]
 
 db_connect_str = "dbname=tpch "
@@ -3219,70 +3221,8 @@ commands = [
                                "COPY part FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T P -o -b " + dbgen_path + "dists.dss -C 64 -S 63' DELIMITER '|';",
                                "COPY supplier FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T s -o -b " + dbgen_path + "dists.dss -C 64 -S 64' DELIMITER '|';",
                                "COPY part FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T P -o -b " + dbgen_path + "dists.dss -C 64 -S 64' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 1' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 1' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 2' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 2' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 3' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 3' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 4' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 4' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 5' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 5' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 6' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 6' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 7' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 7' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 8' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 8' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 9' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 9' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 10' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 10' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 11' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 11' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 12' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 12' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 13' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 13' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 14' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 14' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 15' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 15' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 16' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 16' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 17' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 17' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 18' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 18' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 19' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 19' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 20' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 20' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 21' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 21' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 22' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 22' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 23' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 23' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 24' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 24' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 25' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 25' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 26' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 26' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 27' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 27' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 28' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 28' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 29' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 29' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 30' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 30' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 31' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 31' DELIMITER '|';",
-                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss -C 32 -S 32' DELIMITER '|';",
-                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss -C 32 -S 32' DELIMITER '|';"
+                               "COPY region FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T r -o -b " + dbgen_path + "dists.dss ' DELIMITER '|';",
+                               "COPY nation FROM PROGRAM '" + dbgen_path + "dbgen -s " + dbgen_size + " -T n -o -b " + dbgen_path + "dists.dss ' DELIMITER '|';"
 ]
 
 
