@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "8737s";
+SET statement_timeout = "3600s";
 select
 	sum(l_extendedprice) / 7.0 as avg_yearly
 from

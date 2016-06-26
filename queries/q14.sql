@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "8757s";
+SET statement_timeout = "3600s";
 select
 	100.00 * sum(case
 		when p_type like 'PROMO%'
