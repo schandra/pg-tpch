@@ -1,0 +1,132 @@
+#!/bin/bash
+
+pgxcOwner=postgres
+pgxcUser=postgres
+tmpDir=/tmp
+pgxcInstallDir=$HOME/pgxl-install
+localTmpDir=$tmpDir
+
+configBackup=n
+
+dataDirRoot=/data/pgxl
+
+#---- GTM ------------------------------------------------------------------------------------
+gtmName=gtm
+
+gtmMasterServer=xlcloud1
+gtmMasterPort=20000
+gtmMasterDir=$dataDirRoot/gtm
+
+gtmExtraConfig=none
+gtmMasterSpecificExtraConfig=none
+
+gtmSlave=n
+
+#---- GTM Proxy -------------------------------------------------------------------------------------------------------
+gtmProxyDir=$dataDirRoot/gtm_pxy
+
+gtmProxy=y
+
+gtmProxyNames=(gtm_pxy1 gtm_pxy2 gtm_pxy3 gtm_pxy4 gtm_pxy5 gtm_pxy6 gtm_pxy7 gtm_pxy8)
+gtmProxyServers=(xlcloud2 xlcloud3 xlcloud4 xlcloud5 xlcloud6 xlcloud7 xlcloud8 xlcloud9)
+gtmProxyPorts=(20001 20001 20001 20001 20001 20001 20001 20001)
+gtmProxyDirs=($gtmProxyDir $gtmProxyDir $gtmProxyDir $gtmProxyDir $gtmProxyDir $gtmProxyDir $gtmProxyDir $gtmProxyDir)
+
+gtmPxyExtraConfig=none
+
+#---- Coordinators ----------------------------------------------------------------------------------------------------
+coordMasterDir=$dataDirRoot/coord_master
+coordSlaveDir=$HOME/coord_slave
+coordArchLogDir=$HOME/coord_archlog
+
+coordNames=(coord1 coord2 coord3 coord4 coord5 coord6 coord7 coord8 coord9)
+coordPorts=(20002 20002 20002 20002 20002 20002 20002 20002 20002)
+poolerPorts=(20003 20003 20003 20003 20003 20003 20003 20003 20003)
+coordPgHbaEntries=(10.63.1.0/24)
+
+coordMasterServers=(xlcloud1 xlcloud2 xlcloud3 xlcloud4 xlcloud5 xlcloud6 xlcloud7 xlcloud8 xlcloud9)
+coordMasterDirs=($coordMasterDir $coordMasterDir $coordMasterDir $coordMasterDir $coordMasterDir $coordMasterDir $coordMasterDir $coordMasterDir $coordMasterDir)
+coordMaxWALsender=5
+coordMaxWALSenders=($coordMaxWALsender $coordMaxWALsender $coordMaxWALsender $coordMaxWALsender $coordMaxWALsender $coordMaxWALsender $coordMaxWALsender $coordMaxWALsender $coordMaxWALsender)
+
+coordSpecificExtraConfig=(none none none none none none none none none)
+coordSpecificExtraPgHba=(none none none none none none none none none)
+
+coordSlave=n
+
+#---- Configuration files---
+coordExtraConfig=coordExtraConfig
+cat > $coordExtraConfig <<EOF
+#================================================
+# Added to all the coordinator postgresql.conf
+# Original: $coordExtraConfig
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'pg_log'
+log_line_prefix = '%p:%v:%x:%m:%C:%R'
+listen_addresses = '*'
+max_connections = 200
+max_prepared_transactions = 400
+hot_standby = off
+log_error_verbosity=verbose
+shared_buffers = 1GB
+work_mem = 1GB
+effective_cache_size = 10GB
+default_statistics_target = 10000
+shared_queue_size = 100
+max_pool_size=200
+max_wal_size=16GB
+max_datanodes=32
+max_coordinators=32
+full_page_writes = off
+checkpoint_timeout = 1h
+EOF
+
+#---- Datanodes -------------------------------------------------------------------------------------------------------
+datanodeMasterDir=$dataDirRoot/dn_master
+datanodeSlaveDir=$dataDirRoot/dn_slave
+datanodeArchLogDir=$dataDirRoot/datanode_archlog
+
+#primaryDatanode=datanode1
+datanodeNames=(datanode1 datanode2 datanode3 datanode4 datanode5 datanode6 datanode7 datanode8 datanode9 datanode10 datanode11 datanode12 datanode13 datanode14 datanode15 datanode16 )
+datanodePorts=(20004 20004 20004 20004 20004 20004 20004 20004 20014 20014 20014 20014 20014 20014 20014 20014)
+datanodePoolerPorts=(20005 20005 20005 20005 20005 20005 20005 20005 20015 20015 20015 20015 20015 20015 20015 20015)
+datanodePgHbaEntries=(10.63.1.0/24)
+
+datanodeMasterServers=(xlcloud2 xlcloud3 xlcloud4 xlcloud5 xlcloud6 xlcloud7 xlcloud8 xlcloud9 xlcloud2 xlcloud3 xlcloud4 xlcloud5 xlcloud6 xlcloud7 xlcloud8 xlcloud9)
+datanodeMasterDirs=($datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2)
+datanodeMaxWalSender=5
+datanodeMaxWALSenders=($datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2 $datanodeMasterDir.2)
+
+datanodeSpecificExtraConfig=(none none none none none none none none none none none none none none none none)
+datanodeSpecificExtraPgHba=(none none none none none none none none none none none none none none none none)
+
+datanodeSlave=n
+
+datanodeExtraConfig=datanodeExtraConfig	
+cat > $datanodeExtraConfig <<EOF
+#================================================
+# Added to all the datanode postgresql.conf
+# Original: $datanodeExtraConfig
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'pg_log'
+log_line_prefix = '%p:%v:%x:%m:%C:%R'
+#trace_locks = true
+listen_addresses = '*'
+max_connections = 200
+max_prepared_transactions = 400
+hot_standby = off
+log_error_verbosity=verbose
+shared_buffers = 4GB
+work_mem = 512MB
+effective_cache_size = 10GB
+default_statistics_target = 10000
+shared_queue_size = 100
+max_pool_size=200
+max_wal_size=16GB
+max_datanodes=32
+max_coordinators=32
+full_page_writes = off
+checkpoint_timeout = 1h
+EOF
