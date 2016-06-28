@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "51770s";
+SET statement_timeout = "3600s";
 select
 	nation,
 	o_year,

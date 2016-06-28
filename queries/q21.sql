@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "21901s";
+SET statement_timeout = "10800s";
 select
 	s_name,
 	count(*) as numwait

@@ -7,15 +7,17 @@ from multiprocessing import Process, Queue
 import psycopg2
 
 # pool size
-nprocesses = 16 
-db_connect_str = "dbname=tpch host=localhost"
 
+nprocesses = 12
+db_port = '20002'
+db_hosts = [
+                               "xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9",
+                               "xlcloud2", "xlcloud3", "xlcloud4", "xlcloud5", "xlcloud6", "xlcloud7", "xlcloud8", "xlcloud9"
+               ]
+
+db_connect_str = "dbname=tpch "
 
 commands = [
-"CREATE INDEX customer_c_mktsegment_c_custkey_idx ON customer (c_mktsegment, c_custkey) WITH (fillfactor = 100);",
-"CREATE INDEX customer_c_nationkey_c_custkey_idx ON customer (c_nationkey, c_custkey) WITH (fillfactor = 100);",
-"CREATE INDEX customer_ios_test1 ON customer (substring(c_phone from 1 for 2), c_acctbal, c_custkey) WITH (fillfactor = 100);",
-"CREATE UNIQUE INDEX pk_customer ON customer (c_custkey) WITH (fillfactor = 100);",
 "CREATE INDEX line_item_l_orderkey_l_suppkey_idx ON lineitem (l_orderkey, l_suppkey) WITH (fillfactor = 100);",
 "CREATE INDEX lineitem_l_orderkey_idx_l_returnflag ON lineitem (l_orderkey) WITH (fillfactor = 100) WHERE l_returnflag = 'R';",
 "CREATE INDEX lineitem_l_orderkey_idx_part1 ON lineitem (l_orderkey, l_suppkey) WITH (fillfactor = 100) WHERE l_commitdate < l_receiptdate; -- Q4,Q21",
@@ -29,6 +31,10 @@ commands = [
 "CREATE INDEX orders_o_orderkey_o_orderdate_idx ON orders (o_orderkey, o_orderdate) WITH (fillfactor = 100);",
 "CREATE INDEX orders_o_orderdate_idx ON orders USING BRIN (o_orderdate);",
 "CREATE UNIQUE INDEX pk_orders ON orders (o_orderkey) WITH (fillfactor = 100);",
+"CREATE INDEX customer_c_mktsegment_c_custkey_idx ON customer (c_mktsegment, c_custkey) WITH (fillfactor = 100);",
+"CREATE INDEX customer_c_nationkey_c_custkey_idx ON customer (c_nationkey, c_custkey) WITH (fillfactor = 100);",
+"CREATE INDEX customer_ios_test1 ON customer (substring(c_phone from 1 for 2), c_acctbal, c_custkey) WITH (fillfactor = 100);",
+"CREATE UNIQUE INDEX pk_customer ON customer (c_custkey) WITH (fillfactor = 100);",
 "CREATE INDEX part_ios_test1 ON part USING btree (p_size, p_partkey, p_brand, p_type) WITH (fillfactor = 100);",
 "CREATE INDEX part_p_container_p_brand_p_partkey_idx ON part(p_container, p_brand, p_partkey) WITH (fillfactor = 100);",
 "CREATE INDEX part_p_size_idx ON part USING BRIN (p_size);",
@@ -47,7 +53,7 @@ def run_commands(i, queue_in, queue_out):
 
 		try:
 
-				conn = psycopg2.connect(db_connect_str)
+				conn = psycopg2.connect(db_connect_str + 'host = ' + db_hosts[i] + ' port = ' + db_port)
 				cur  = conn.cursor()
 
 				# iterate over results from the queue

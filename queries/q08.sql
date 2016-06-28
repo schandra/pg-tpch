@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-SET statement_timeout = "5440s";
+SET statement_timeout = "3600s";
 select
 	o_year,
 	sum(case
