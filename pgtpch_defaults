@@ -3,13 +3,13 @@
 # Configuration variables
 # Scale factor. 1 = 1GB, 10 = 10GB. TPC-H has rules about which scale factors
 # are considered valid for comparative purposes.
-SCALE=100 #GB
+SCALE=5 #GB
 
 # Other configuration variables
 BASEDIR=$(dirname "$0")
 BASEDIR=$(cd "$BASEDIR"; pwd)
-TPCHTMP=/AXLE/$USER/tpch_tmp
-PGDATADIR=/AXLE/$USER/pgdata${SCALE}GB
+TPCHTMP=/mnt/ssd-data/tmp/tpch_tmp
+PGDATADIR=/mnt/ssd-data/tmp/pgdata${SCALE}GB
 PGPORT=5442
 REMAKE_DATA=true
 DB_NAME="tpch"
@@ -18,8 +18,8 @@ CREATE_MIN_INDEXES=false
 CREATE_ALL_INDEXES=true
 PERFDATADIR=perfdata
 CORES=`grep -c ^processor /proc/cpuinfo`
-PGUSER="nobody"
-PGBINDIR=$HOME/bin/postgres-bs128/bin
+PGUSER="schandra"
+PGBINDIR=$HOME/UofA/PeakShavingQueryOptimizer/pgsql/bin
 LOGGING=false
 
 # Install teardown() function to kill any lingering jobs
