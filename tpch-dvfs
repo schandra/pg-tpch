@@ -1,0 +1,17 @@
+#!/bin/bash
+
+speeds="1.40Ghz 1.90Ghz 2.30Ghz 2.80Ghz 3.10Ghz"
+for speed in $speeds
+do
+	echo "****************** Setting CPU speeds to $speed *****************"
+	for cpu in {0..7}
+	do
+		sudo cpufreq-set -c $cpu -f $speed 
+		#echo $cpu $speed
+	done
+	echo "****************** Run the TPCH benchmark	*******************"
+	./tpch_runall_seq
+	echo "****************** House Keeping ******************"
+	mv perfdata-5GB perfdata-5GB-$speed
+done
+
