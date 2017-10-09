@@ -1,7 +1,7 @@
 -- using 1433771997 as a seed to the RNG
 
 
-explain analyze select
+explain (ANALYZE, FORMAT JSON) select
 	o_orderpriority,
 	count(*) as order_count
 from

@@ -1,10 +1,11 @@
 #!/bin/bash
 
-speeds="1.40Ghz 1.90Ghz 2.30Ghz 2.80Ghz 3.10Ghz"
+speeds="1.20Ghz 1.50Ghz 1.90Ghz 2.10Ghz 2.40Ghz 2.60Ghz 2.90Ghz 3.10Ghz 3.30Ghz 3.60Ghz"
+#speeds="1.40Ghz 1.90Ghz 2.30Ghz 2.80Ghz 3.10Ghz"
 for speed in $speeds
 do
 	echo "****************** Setting CPU speeds to $speed *****************"
-	for cpu in {0..7}
+	for cpu in {0..3}
 	do
 		sudo cpufreq-set -c $cpu -f $speed 
 		#echo $cpu $speed

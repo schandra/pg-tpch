@@ -13,7 +13,7 @@ create view revenue0 (supplier_no, total_revenue) as
 		l_suppkey;
 
 
-explain analyze select
+explain (ANALYZE, FORMAT JSON) select
 	s_suppkey,
 	s_name,
 	s_address,
